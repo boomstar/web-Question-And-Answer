@@ -1,0 +1,8 @@
+Q: display有哪些值？分别的作用是什么？
+A:  block           此元素被显示为块级元素，前后带有换行符；
+    inline          此元素被显示为内联元素，前后没有换行符；
+    inline-block    行内块元素；
+    none            此元素不会被显示；
+    flex            弹性盒模型，作为flex的容器
+    table           此元素会作为块级表格来显示
+    table-cell      此元素会作为一个单元格列显示

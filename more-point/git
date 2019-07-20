@@ -1,0 +1,8 @@
+Q: Git的reset和revert有什么区别？它们分别适用于什么场景？
+A: git revert 是用一次新的commit来回滚之前的commit，
+    git reset 是直接删除指定的commit
+
+    用于：回退所有内容到上一版本 git reset HEAD^
+         == 恢复到之前的版本，那版本之后的提交都不需要了。
+        丢弃最近3个commit，把状态恢复到最近的第4个commit，并且提交一个新的commit来记录这次改变 git revert HEAD~3
+         == 恢复到某一版本，但是那版本之后的提交也要保存下来。
