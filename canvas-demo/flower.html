@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        html,body{
+            margin:0;
+            width: 100vw;   
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+            user-select: none;
+        }
+        #can{
+            width: 100%;
+            height: 100%;
+            user-select: none;
+            cursor: crosshair
+        }
+    </style>
+</head>
+<body>
+    <canvas id="can"></canvas>
+    <script>
+        //3.定义每一个花卉
+        class Flower {
+            constructor(){
+                this.x = 0;
+                this.y = 0;
+                this.radius = 0;            //半径
+                this.direction = 0;         //方向
+                this.dDir = 0;              //方向系数
+                this.rightOrLeft = false;   //往左画 还是往右画
+                this.shooted = false;       //是否发芽
+                this.color = 0;
+            }
+            // 发芽 === 向四周扩散
+            shoot( x,y,direction ){
+                this.shooted = true;
+                this.x = x;
+                this.y = y;
+                this.direction = direction;
+                this.dDir = Math.random();
+                this.radius = Math.random()*20 + 5;
+                this.rightOrLeft = Math.random() < 0.5;
+                this.color = `hsl(${Math.floor( Math.random()*90 ) - (Math.random() > 0.33 ? 30 : 160) }, 80% , 60%)`;
+            }
+            //动画
+            anima(){
+                //检测是否第一次进入画面
+                if( !this.shooted ){
+                    pointer.next = this
+                    return
+                }
+
+                //x++ y++  套用AS3公式，算法
+                this.x += this.radius * Math.cos( this.direction )
+                this.y += this.radius * Math.sin( this.direction )
+
+                cxt.beginPath();
+                cxt.fillStyle = this.color;
+                cxt.arc( this.x , this.y , this.radius*0.5 , 0 , 2*Math.PI )
+                cxt.fill();
+                cxt.stroke();
+                //从直线变成弧形
+                if( this.rightOrLeft ){
+                    this.direction -= this.dDir
+                }else{
+                    this.direction += this.dDir
+                };
+                this.radius -= 0.4;
+                if( this.radius <= 0 ){
+                    this.shooted = false
+                }
+            }
+        }
+
+        //4. 鼠标的配置信息
+        const pointer = {
+            x: 0,
+            y: 0,
+            xb: 0,  //x轴偏移量
+            yb: 0,  //y轴偏移量
+            next: null ,
+            frame: 0,
+            init(canvas){
+                canvas.ele.addEventListener('mousemove',e => this.move(e),false)
+            },
+            move(e){
+                // 鼠标移动时更新坐标，生成花卉
+                this.x = e.clientX;
+                this.y = e.clientY;
+                this.shoot( this.x , this.y )
+            },
+            shoot( x,y ){
+                // 第一次进入页面 要自动生成花卉
+                if( !this.next ){
+                    this.next = new Flower();
+                    Flowers.push(this.next );
+                };
+                //在移动的时候会生成很多花卉， 淡出 ，移动三次就覆盖透明层在上面
+                this.frame ++ ;
+                if( !(this.frame % 3) ){
+                    cxt.fillStyle = 'rgba( 8,8,8,0.05 )'
+                    cxt.fillRect( 0 , 0 , canvas.width , canvas.height )
+                };
+                //鼠标移动时候要改变坐标
+                // Math.atan(y/x) 求斜率  == 一个角度的弧度值 y/x为直线的斜率
+                // Math.atan2(y,x) == 弧度angle 此方法返回从x轴到点（x，y）之间的角度
+                this.next.shoot( x,y,Math.atan2( y-this.yb,x-this.xb ) );
+                this.next = null;
+                this.xb = x;
+                this.yb = y;
+
+            }
+        }
+
+        //1.canvas 大小自适应
+        const canvas = {
+            init(){
+                this.ele = document.querySelector("#can");
+                this.resize();
+                window.addEventListener('resize',()=>this.resize(),false);
+                return this.ele.getContext('2d');
+            },
+            resize(){
+                this.width = this.ele.width = this.ele.offsetWidth;
+                this.height = this.ele.height = this.ele.offsetHeight;
+            }
+        };
+        //2.初始化
+        const cxt = canvas.init();
+
+        pointer.init(canvas);
+
+        const Flowers = [];
+        const play = () => {
+            for( const f of Flowers ){
+                f.anima()
+            };
+            requestAnimationFrame(play)
+        };
+        //每次初始化
+
+        for( let size = 0; size < 2*Math.PI ; size += 0.1 ){
+            pointer.shoot(
+                canvas.width * 0.5 + Math.cos(size) * canvas.width * 0.25 ,
+                canvas.height * 0.5 + Math.sin(size) * canvas.height * 0.25
+            )
+        }
+
+
+        play();
+    </script>
+</body>
+</html>
