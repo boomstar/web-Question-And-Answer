@@ -1,0 +1,7 @@
+Q: 当元素被设置为浮动，它的display有哪些改变？
+A: 当元素属性设置为float时，会提升元素的层级，隐性的将内联元素转化成块元素，但是不会占据一行。
+    宽高会变成最小值，margin,padding值依然生效
+    之前是块元素，会受影响，如：display属性 block、-webkit-box、grid、table、flex 
+    不受影响的display属性 inline-block、inline-table、inline-grid、contents、none
+    
+    

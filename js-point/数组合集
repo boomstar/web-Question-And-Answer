@@ -1,0 +1,21 @@
+Q: 分别写出数组的交集、并集、差集、补集
+A: 
+    // 交集
+    function mix( arr1, arr2 ){
+        return arr1.filter( v => arr2.includes(v) );
+    };
+    //并集
+    function sum( arr1, arr2 ){
+        return arr1.concat( arr2.filter( v => !arr1.includes(v) ) );
+    };
+    //差集
+    function diff( arr1, arr2 ){
+        return arr1.concat( arr2 ).filter( v => !arr1.includes(v) || !arr2.includes(v) );
+    }
+    //补集
+    Array.prototype.supple = function( arr ){
+        //先拿到并集
+        let sum = this.concat( arr.filter( v => !this.includes(v) ) );
+        //再取差集
+        return sum.filter( v => !this.includes(v) );
+    };

@@ -1,0 +1,90 @@
+Q: 你知道什么是图片防盗链吗？防盗链如何实现？
+A: 防盗链的原理：http协议中，如果从一个页面跳转到另外一个页面，http头字段里面会带个Referer.图片服务器通过检测Referer是否来自规定域名，来进行防盗链。
+    设置方法
+    1.使用apache文件FileMatch限制，在httpd.conf中增加并放到网站跟目录下（www/html目录）
+        .htaccess文件
+        SetEnvIfNoCase Referer "http://baidu.com/" local_ref=1
+
+        Order Allow,Deny
+        Allow from env=local_ref
+        Allow from 127.0.0.1
+    
+    2.使用rewrite,需要增加apache的mode_rewrite,支持.htaccess文件目录权限限制在虚拟机跟目录增加.htaccess文件，描述从定向，把非本地地址的refer的图片文件都定向到警告图片
+
+        RewriteEngine on
+
+    　　RewriteCond %{HTTP_REFERER} !^$ [NC]
+
+    　　RewriteCond %{HTTP_REFERER} !simcole.cn [NC]
+
+    　　RewriteCond %{HTTP_REFERER} !zhuaxia.com [NC]
+
+    　　RewriteCond %{HTTP_REFERER} !google.com [NC]
+
+    　　RewriteCond %{HTTP_REFERER} !baidu.com [NC]
+
+    　　RewriteCond %{HTTP_REFERER} !bloglines.com [NC]
+
+    //这部分是判断是否盗链，如果以上条件都成立(即访问图片的请求，既不是直接输入网址，也不是来自simcole.cn，也不是来自zhuaxia.com，也不是来自google.com，也不是来自baidu.com，也不是来自bloglines.com 的话)，就执行下列转向：
+
+    　　RewriteRule .(jpg|gif|png|bmp|swf|jpeg) /image/replace.gif [R,NC,L]
+
+    //意思是让所有盗链 img 目录下 jpg、gif、png、bmp、swf、jpeg 文件的网页，显示的图片都用 image 目录下的 replace.gif 图片替换掉。
+    注意替换显示的图片不要放在设置防盗链的 img 目录下。如果照上面的规则判断出图片请求不是盗链的，就执行以下转向：
+
+    　　RewriteRule ^(.*)$ http://image.simcole.cn/image/$1 [L]  
+
+    //意思是对 img 目录下所有的请求都转向到目标服务器，比如有个图片原来的 url 是 http://www.bebecn.com/img/girl.jpg ，现在就会转到 http://image.bebecn.com/image/girl.jpg 去  
+
+    3.通过php直接获取资源，在PHP进行拦截
+        $referer = $_SERVER['HTTP_REFERER']; //HTTP Referer是header的一部分，当浏览器向web服务器发送请求的时候，一般会带上Referer，告诉服务器我是从哪个页面链接过来的，服务器基此可以获得一些信息用于处理。  
+        $selfurl = $_SERVER['HTTP_HOST'];//在php中，我们一般通过$_SERVER['HTTP_HOST']来活得URL中网站的域名或者ip地址。  
+        if(false == strpos($referer,$selfurl))  
+        {  
+            echo '非法盗链!';  
+            exit(1);  
+        }  
+    
+    4.ngix防盗链
+        location ~* \.(gif|jpg|png|bmp)$ {
+            valid_referers none blocked *.ttlsa.com server_names ~\.google\. ~\.baidu\.;
+            if ($invalid_referer) {
+                return 403;
+                #rewrite ^/ http://www.ttlsa.com/403.jpg;
+            }
+        }
+
+    5.nodejs express模块防盗链
+        var express = require('express'),
+        path = require('path'),
+        app = express();
+        
+        var AntiLeech = require('express-anti-leech');
+
+        // 允许引用的域名白名单
+        var hosts = ['localhost', 'localhost:8004'];
+
+        // 反盗链类型
+        var exts = ['.png', '.jpg', '.jpeg', '.gif', '.swf', '.flv'];
+
+        // 盗链默认指向图片
+        var pictrue = "/images/default.png";
+
+        app.use(AntiLeech({
+        allow: hosts,
+        exts: exts,
+        log: console.log, // 你也可以使用自己的方法来记录
+        default: pictrue
+        }));
+
+        // 请在调用静态资源之前先使用反盗链模块
+        app.use(express.static(path.join(__dirname, 'public')));
+        app.set('port', process.env.PORT || 8004);
+
+        app.get('/', function(req, res) {
+        res.redirect("/index.html");
+        });
+
+        app.listen(app.get('port'), function() {
+        console.log("Express test server listening on http://localhost:" + app.get('port'));
+        });
