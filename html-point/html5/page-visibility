@@ -1,0 +1,11 @@
+Q: HTML5的页面可见性（ Page Visibility ）有哪些应用场景？
+A: 产生原因：不能触发unload、pageHide事件的时候
+        相应的场景有：
+            手机端后台切换APP；
+            手机端直接按home键返回主界面
+            PC端最小化
+    使用场景：
+        停止与浏览器的持续请求
+        音频、视频的持续播放
+    触发的事件：
+        document.onvisibilitychange
